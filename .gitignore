@@ -1,0 +1,5 @@
+cmake/FindPythonInterp.cmake
+cmake/FindPythonLibs.cmake
+
+build/
+*.so
