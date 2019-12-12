@@ -1,3 +1,6 @@
+.idea/
+cmake-build-debug/
+
 cmake/FindPythonInterp.cmake
 cmake/FindPythonLibs.cmake
 
