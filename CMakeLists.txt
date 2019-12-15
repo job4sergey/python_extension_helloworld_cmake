@@ -18,5 +18,11 @@ add_executable(libgreet
         greet.c
         README.md)
 
+add_executable(libnoddy noddy4.c)
+add_executable(mymodule mymodule.c)
+
 set_target_properties(libgreet PROPERTIES SUFFIX ".cpython-35m-x86_64-linux-gnu.so")
+set_target_properties(libnoddy PROPERTIES SUFFIX ".cpython-35m-x86_64-linux-gnu.so")
+set_target_properties(mymodule PROPERTIES SUFFIX ".cpython-35m-x86_64-linux-gnu.so")
+
 message("PYTHON_EXECUTABLE ${PYTHON_EXECUTABLE}")
