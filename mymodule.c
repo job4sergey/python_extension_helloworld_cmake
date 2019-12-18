@@ -1,9 +1,11 @@
 #include <Python.h>
 #include "structmember.h"
+#include <stdio.h>
 
 typedef struct {
     PyObject_HEAD
     PyObject *obj;
+    PyObject *callback;
     int state;
 } Shoddy;
 
@@ -34,7 +36,31 @@ Shoddy_str_of_obj_concat_str_arg(Shoddy *self, PyObject *args) {
 }
 
 static PyObject *
-Shoddy_str_of_obj_concat_str_arg2(Shoddy *self, PyObject *args) {
+Shoddy_set_callback(Shoddy *self, PyObject *args) {
+    PyObject *py_callback;
+    if (!PyArg_ParseTuple(args, "O", &py_callback))
+        return NULL;
+
+    if (PyCallable_Check(py_callback)) {
+        self->callback = py_callback;
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Need a callable object!");
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *Shoddy_fire_callback(Shoddy *self, PyObject *args) {
+    PyObject *arglist = Py_BuildValue("(i)", self->state);
+    PyObject *result = PyEval_CallObject(self->callback, arglist);
+    Py_XDECREF(result);
+    Py_DECREF(arglist);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+Shoddy_str_of_obj_concat_str_arg2(Shoddy *self, PyObject *Py_UNUSED(args)) {
     PyObject *obj_str_value;
     PyObject *obj_str_value2;
     PyObject *res;
@@ -49,10 +75,14 @@ Shoddy_str_of_obj_concat_str_arg2(Shoddy *self, PyObject *args) {
 
 
 static PyMethodDef Shoddy_methods[] = {
-        {"increment",                 (PyCFunction) Shoddy_increment,                 METH_NOARGS,
+        {"increment",                  (PyCFunction) Shoddy_increment,                  METH_NOARGS,
                 PyDoc_STR("increment state counter")},
-        {"str_of_obj_concat_str_arg", (PyCFunction) Shoddy_str_of_obj_concat_str_arg, METH_VARARGS,
+        {"str_of_obj_concat_str_arg",  (PyCFunction) Shoddy_str_of_obj_concat_str_arg,  METH_VARARGS,
                 PyDoc_STR("str_of_obj_concat_str_arg")},
+        {"set_callback",               (PyCFunction) Shoddy_set_callback,               METH_VARARGS,
+                PyDoc_STR("set_callback")},
+        {"fire_callback",              (PyCFunction) Shoddy_fire_callback,              METH_NOARGS,
+                PyDoc_STR("fire_callback")},
         {"str_of_obj_concat_str_arg2", (PyCFunction) Shoddy_str_of_obj_concat_str_arg2, METH_VARARGS,
                 PyDoc_STR("str_of_obj_concat_str_arg2")},
         {NULL},
@@ -83,17 +113,17 @@ Shoddy_dealloc(Shoddy *self) {
 }
 
 static PyObject *
-Shoddy_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
+Shoddy_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     Shoddy *self;
 
-    self = (Shoddy*)type->tp_alloc(type, 0);
+    self = (Shoddy *) type->tp_alloc(type, 0);
     if (self != NULL) {
         self->obj = Py_None;
         self->state = 0;
     }
+    printf("Shoddy_new\n");
 
-    return (PyObject *)self;
+    return (PyObject *) self;
 }
 
 static int
@@ -103,6 +133,7 @@ Shoddy_init(Shoddy *self, PyObject *args, PyObject *kwds) {
 
     self->state = 0;
     self->obj = Py_None;
+    printf("Shoddy_init\n");
     return 0;
 }
 
@@ -143,8 +174,8 @@ static PyTypeObject ShoddyType = {
         Py_TPFLAGS_BASETYPE |
         Py_TPFLAGS_HAVE_GC,     /* tp_flags */
         0,                       /* tp_doc */
-        (traverseproc)Shoddy_traverse, /* tp_traverse */
-        (inquiry)Shoddy_clear,  /* tp_clear */
+        (traverseproc) Shoddy_traverse, /* tp_traverse */
+        (inquiry) Shoddy_clear,  /* tp_clear */
         0,                       /* tp_richcompare */
         0,                       /* tp_weaklistoffset */
         0,                       /* tp_iter */
@@ -157,7 +188,7 @@ static PyTypeObject ShoddyType = {
         0,                       /* tp_descr_get */
         0,                       /* tp_descr_set */
         0,                       /* tp_dictoffset */
-        (initproc)Shoddy_init,   /* tp_init */
+        (initproc) Shoddy_init,   /* tp_init */
         0,                       /* tp_alloc */
         Shoddy_new,             /* tp_new */
 };

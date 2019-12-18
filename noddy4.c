@@ -83,7 +83,7 @@ Noddy_init(Noddy *self, PyObject *args, PyObject *kwds)
 
     static char *kwlist[] = {"first", "last", "number", NULL};
 
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOi", kwlist,
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "OOi", kwlist,
                                       &first, &last,
                                       &self->number))
         return -1;
@@ -129,7 +129,7 @@ Noddy_name(Noddy* self)
         return NULL;
     }
 
-    return PyUnicode_FromFormat("%S %S", self->first, self->last);
+    return PyUnicode_FromFormat("%S %S %d", self->first, self->last, self->number);
 }
 
 static PyMethodDef Noddy_methods[] = {
